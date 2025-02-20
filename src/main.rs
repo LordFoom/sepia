@@ -1,14 +1,20 @@
 mod args;
 
-use color_eyre::eyre::Result;
-use log::LevelFilter;
+use chrono::Utc;
+use color_eyre::{eyre::Result, owo_colors::OwoColorize};
+use log::{debug, LevelFilter};
 use log4rs::{
     append::{console::ConsoleAppender, file::FileAppender},
     config::{Appender, Root},
     encode::pattern::PatternEncoder,
     Config,
 };
-use std::time::Instant;
+use std::{
+    io::{stdin, Read},
+    sync::mpsc,
+    thread,
+    time::{Duration, Instant},
+};
 
 use xcap::Monitor;
 
@@ -56,12 +62,43 @@ fn init_logging(verbose: bool) -> Result<()> {
 }
 
 fn main() -> Result<()> {
+    debug!("Let's get image capturing time!");
     let start = Instant::now();
     let monitors = Monitor::all().unwrap();
-    for monitor in monitors {
-        let image = monitor.capture_image().unwrap();
-        image.save(format!("monitor-{}.png", normalized(monitor.name())))?;
+
+    let (tx_exit, rx_exit) = mpsc::channel();
+    thread::spawn(move || {
+        let mut stdin = stdin();
+        let mut buf = [0; 1];
+        while stdin.read_exact(&mut buf).is_ok() {
+            let ch = buf[0] as char;
+            if tx_exit.send(ch).is_err() {
+                debug!("Error break in quit thread");
+                break;
+            }
+            if ch == 'q' {
+                debug!("We got  that Q!");
+                break;
+            }
+        }
+    });
+    println!("Press {} to exit", "q".bold().yellow());
+    loop {
+        if let Ok(ch) = rx_exit.try_recv() {
+            if ch == 'q' {
+                println!("{}....!!", "Quitting".red().bold());
+                break;
+            }
+        }
+        let now = Utc::now();
+        for monitor in monitors.clone() {
+            let now_monitor = format!("{}{}", monitor.name(), now.to_string());
+            let image = monitor.capture_image().unwrap();
+            image.save(format!("monitor-{}.png", normalized(&now_monitor)))?;
+        }
+        thread::sleep(Duration::from_secs(1));
     }
+
     println!("Elapsed time: {:?}", start.elapsed());
     Ok(())
 }
