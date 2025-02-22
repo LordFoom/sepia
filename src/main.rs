@@ -1,6 +1,8 @@
 mod args;
 
+use args::AppArgs;
 use chrono::Utc;
+use clap::Parser;
 use color_eyre::{eyre::Result, owo_colors::OwoColorize};
 use log::{debug, LevelFilter};
 use log4rs::{
@@ -62,10 +64,18 @@ fn init_logging(verbose: bool) -> Result<()> {
 }
 
 fn main() -> Result<()> {
+    let args = AppArgs::parse();
+    init_logging(args.verbose)?;
+    let num_seconds_between_screen_shots = if let Some(user_time) = args.time {
+        user_time
+    } else {
+        1
+    };
     debug!("Let's get image capturing time!");
     let start = Instant::now();
     let monitors = Monitor::all().unwrap();
 
+    //thread listens for quit command
     let (tx_exit, rx_exit) = mpsc::channel();
     thread::spawn(move || {
         let mut stdin = stdin();
@@ -83,6 +93,7 @@ fn main() -> Result<()> {
         }
     });
     println!("Press {} to exit", "q".bold().yellow());
+    //main loop that takes screenshots
     loop {
         if let Ok(ch) = rx_exit.try_recv() {
             if ch == 'q' {
@@ -96,7 +107,7 @@ fn main() -> Result<()> {
             let image = monitor.capture_image().unwrap();
             image.save(format!("monitor-{}.png", normalized(&now_monitor)))?;
         }
-        thread::sleep(Duration::from_secs(1));
+        thread::sleep(Duration::from_secs(num_seconds_between_screen_shots));
     }
 
     println!("Elapsed time: {:?}", start.elapsed());
