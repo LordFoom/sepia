@@ -13,6 +13,7 @@ use log4rs::{
 };
 use std::{
     io::{stdin, Read},
+    path::Path,
     sync::mpsc,
     thread,
     time::{Duration, Instant},
@@ -46,6 +47,7 @@ fn init_logging(verbose: bool) -> Result<()> {
     } else {
         LevelFilter::Info
     };
+
     // Build the `log4rs` configuration
     let config = Config::builder()
         .appender(Appender::builder().build("stdout", Box::new(stdout)))
@@ -92,6 +94,32 @@ fn main() -> Result<()> {
             }
         }
     });
+
+    //let us get the possible dir
+    let storage_dir = if let Some(dir) = args.dir {
+        //does the directory exist?
+        let storage_dir = Path::new(&dir);
+        if storage_dir.exists() {
+            if storage_dir.is_file() {
+                panic!(
+                    "Woah! Cannot store pics in a file, must be a dir, this is a file: {}",
+                    storage_dir.to_str().unwrap_or("UNKNOWN")
+                )
+            }
+            let mut dir_path = storage_dir.to_str().unwrap_or("./").to_string();
+            if !dir_path.ends_with('/') {
+                dir_path.push('/');
+            }
+            dir_path
+        } else {
+            //no, then let us create it
+            std::fs::create_dir(storage_dir).unwrap();
+            storage_dir.to_str().unwrap_or("./").to_string()
+        }
+    } else {
+        //current directory is the default
+        "./".to_string()
+    };
     println!("Press {} to exit", "q".bold().yellow());
     //main loop that takes screenshots
     loop {
@@ -105,7 +133,11 @@ fn main() -> Result<()> {
         for monitor in monitors.clone() {
             let now_monitor = format!("{}{}", monitor.name(), now.to_string());
             let image = monitor.capture_image().unwrap();
-            image.save(format!("monitor-{}.png", normalized(&now_monitor)))?;
+            image.save(format!(
+                "{}monitor-{}.png",
+                storage_dir,
+                normalized(&now_monitor)
+            ))?;
         }
         thread::sleep(Duration::from_secs(num_seconds_between_screen_shots));
     }
