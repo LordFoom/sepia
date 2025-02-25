@@ -9,4 +9,7 @@ pub struct AppArgs {
     pub verbose: bool,
     #[arg(short, long)]
     pub dir: Option<String>,
+    ///Only take screenshots if the screen has changed, even if "time" seconds have passed
+    #[arg[short, long]]
+    pub motion_triggered: bool,
 }
