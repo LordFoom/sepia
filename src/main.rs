@@ -12,6 +12,7 @@ use log4rs::{
     Config,
 };
 use std::{
+    collections::HashMap,
     io::{stdin, Read},
     path::Path,
     sync::mpsc,
@@ -65,6 +66,7 @@ fn init_logging(verbose: bool) -> Result<()> {
     Ok(())
 }
 
+//TODO add 'sensitivity' flag to control pHash difference needed for save
 fn main() -> Result<()> {
     let args = AppArgs::parse();
     init_logging(args.verbose)?;
@@ -138,6 +140,11 @@ fn main() -> Result<()> {
                 storage_dir,
                 normalized(&now_monitor)
             ))?;
+            //now we load the image we just created using 'image' lib
+            //then we compute the pHash
+            //if hamming_distance_exceeds_limit(image)
+            //if distance not big enough, we delete the new image
+            //otherwise it can stay
         }
         thread::sleep(Duration::from_secs(num_seconds_between_screen_shots));
     }
