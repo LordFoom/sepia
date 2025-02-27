@@ -4,6 +4,7 @@ use args::AppArgs;
 use chrono::Utc;
 use clap::Parser;
 use color_eyre::{eyre::Result, owo_colors::OwoColorize};
+use image::ImageBuffer;
 use log::{debug, LevelFilter};
 use log4rs::{
     append::{console::ConsoleAppender, file::FileAppender},
@@ -122,6 +123,9 @@ fn main() -> Result<()> {
         //current directory is the default
         "./".to_string()
     };
+    //take an initial screenshot for comparison
+    let mut current_screenshot = HashMap::new();
+    take_screenshot(&mut current_screenshot, 100);
     println!("Press {} to exit", "q".bold().yellow());
     //main loop that takes screenshots
     loop {
@@ -151,4 +155,8 @@ fn main() -> Result<()> {
 
     println!("Elapsed time: {:?}", start.elapsed());
     Ok(())
+}
+
+fn take_screenshot(current_screenshot: &mut HashMap<String, ImageBuffer>, arg: i32) -> Result<()> {
+    todo!()
 }
