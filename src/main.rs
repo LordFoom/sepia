@@ -4,7 +4,7 @@ use args::AppArgs;
 use chrono::Utc;
 use clap::Parser;
 use color_eyre::{eyre::Result, owo_colors::OwoColorize};
-use image::ImageBuffer;
+use image::ImageReader;
 use log::{debug, LevelFilter};
 use log4rs::{
     append::{console::ConsoleAppender, file::FileAppender},
@@ -12,6 +12,7 @@ use log4rs::{
     encode::pattern::PatternEncoder,
     Config,
 };
+
 use std::{
     collections::HashMap,
     io::{stdin, Read},
@@ -124,8 +125,8 @@ fn main() -> Result<()> {
         "./".to_string()
     };
     //take an initial screenshot for comparison
-    let mut current_screenshot = HashMap::new();
-    take_screenshot(&mut current_screenshot, 100);
+    let maybe_dir = args.clone().dir;
+    take_screenshot(&storage_dir);
     println!("Press {} to exit", "q".bold().yellow());
     //main loop that takes screenshots
     loop {
@@ -139,12 +140,11 @@ fn main() -> Result<()> {
         for monitor in monitors.clone() {
             let now_monitor = format!("{}{}", monitor.name(), now.to_string());
             let image = monitor.capture_image().unwrap();
-            image.save(format!(
-                "{}monitor-{}.png",
-                storage_dir,
-                normalized(&now_monitor)
-            ))?;
+            let screen_shot_path =
+                format!("{}monitor-{}.png", storage_dir, normalized(&now_monitor));
+            image.save(&screen_shot_path)?;
             //now we load the image we just created using 'image' lib
+            let scr_img = ImageReader::open(&screen_shot_path)?.decode()?;
             //then we compute the pHash
             //if hamming_distance_exceeds_limit(image)
             //if distance not big enough, we delete the new image
@@ -157,6 +157,23 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn take_screenshot(current_screenshot: &mut HashMap<String, ImageBuffer>, arg: i32) -> Result<()> {
-    todo!()
+///Take a screenshot, return map of monitor name => screen shot path
+fn take_screenshot(monitors: &Vec<Monitor>, storage_dir: &str) -> Result<HashMap<String, String>> {
+    let now = Utc::now();
+    for monitor in monitors.clone() {
+        let now_monitor = format!("{}{}", monitor.name(), now.to_string());
+        let image = monitor.capture_image().unwrap();
+        image.save(format!(
+            "{}monitor-{}.png",
+            storage_dir.unwrap_unchecked,
+            normalized(&now_monitor)
+        ))?;
+        //now we load the image we just created using 'image' lib
+        //then we compute the pHash
+        //if hamming_distance_exceeds_limit(image)
+        //if distance not big enough, we delete the new image
+        //otherwise it can stay
+    }
+    //TODO: replace this with the actual hashmap:
+    Ok(HashMap::new())
 }
