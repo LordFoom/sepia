@@ -1,5 +1,5 @@
-use clap::{Args, Parser};
-#[derive(Debug, Parser)]
+use clap::Parser;
+#[derive(Debug, Parser, Clone)]
 #[command(version = "0.2", about = "Screenshotting app to record  my days")]
 pub struct AppArgs {
     ///Time in seconds between screenshots
