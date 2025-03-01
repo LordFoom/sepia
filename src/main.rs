@@ -4,7 +4,7 @@ use args::AppArgs;
 use chrono::Utc;
 use clap::Parser;
 use color_eyre::{eyre::Result, owo_colors::OwoColorize};
-use image::ImageReader;
+use image::{DynamicImage, ImageReader};
 use log::{debug, LevelFilter};
 use log4rs::{
     append::{console::ConsoleAppender, file::FileAppender},
@@ -125,8 +125,7 @@ fn main() -> Result<()> {
         "./".to_string()
     };
     //take an initial screenshot for comparison
-    let maybe_dir = args.clone().dir;
-    take_screenshot(&storage_dir);
+    let first_baseline = take_screenshot(&monitors, &storage_dir);
     println!("Press {} to exit", "q".bold().yellow());
     //main loop that takes screenshots
     loop {
@@ -158,22 +157,26 @@ fn main() -> Result<()> {
 }
 
 ///Take a screenshot, return map of monitor name => screen shot path
-fn take_screenshot(monitors: &Vec<Monitor>, storage_dir: &str) -> Result<HashMap<String, String>> {
+fn take_screenshot(monitors: &Vec<Monitor>, storage_dir: &str) -> Result<HashMap<String, DynamicImage>> {
     let now = Utc::now();
+    let mut monitor_screenshots = HashMap::new(); 
     for monitor in monitors.clone() {
         let now_monitor = format!("{}{}", monitor.name(), now.to_string());
-        let image = monitor.capture_image().unwrap();
-        image.save(format!(
+        let screen_shot = monitor.capture_image().unwrap();
+        let path = format!(
             "{}monitor-{}.png",
-            storage_dir.unwrap_unchecked,
+            storage_dir,
             normalized(&now_monitor)
-        ))?;
+        );
+        monitor_screenshots.insert(path, )
+        screen_shot.save(path)?;
         //now we load the image we just created using 'image' lib
+
         //then we compute the pHash
         //if hamming_distance_exceeds_limit(image)
         //if distance not big enough, we delete the new image
         //otherwise it can stay
     }
-    //TODO: replace this with the actual hashmap:
+    //replace this with the actual hashmap
     Ok(HashMap::new())
 }
