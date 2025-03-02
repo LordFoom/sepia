@@ -157,20 +157,22 @@ fn main() -> Result<()> {
 }
 
 ///Take a screenshot, return map of monitor name => screen shot path
-fn take_screenshot(monitors: &Vec<Monitor>, storage_dir: &str) -> Result<HashMap<String, DynamicImage>> {
+fn take_screenshot(
+    monitors: &Vec<Monitor>,
+    storage_dir: &str,
+) -> Result<HashMap<String, DynamicImage>> {
     let now = Utc::now();
-    let mut monitor_screenshots = HashMap::new(); 
+    let mut monitor_screenshots = HashMap::new();
     for monitor in monitors.clone() {
-        let now_monitor = format!("{}{}", monitor.name(), now.to_string());
+        let now_monitor_name = monitor.name().to_string();
+        let now_monitor = format!("{}{}", now_monitor_name, now.to_string());
         let screen_shot = monitor.capture_image().unwrap();
-        let path = format!(
-            "{}monitor-{}.png",
-            storage_dir,
-            normalized(&now_monitor)
-        );
-        monitor_screenshots.insert(path, )
-        screen_shot.save(path)?;
+        let path = format!("{}monitor-{}.png", storage_dir, normalized(&now_monitor));
+        //monitor_screenshots.insert(path, )
+        screen_shot.save(&path)?;
         //now we load the image we just created using 'image' lib
+        let just_saved_img = image::ImageReader::open(&path)?.decode()?;
+        monitor_screenshots.insert(now_monitor_name, just_saved_img);
 
         //then we compute the pHash
         //if hamming_distance_exceeds_limit(image)
@@ -178,5 +180,5 @@ fn take_screenshot(monitors: &Vec<Monitor>, storage_dir: &str) -> Result<HashMap
         //otherwise it can stay
     }
     //replace this with the actual hashmap
-    Ok(HashMap::new())
+    Ok(monitor_screenshots)
 }
