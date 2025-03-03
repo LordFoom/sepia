@@ -79,7 +79,6 @@ fn main() -> Result<()> {
     };
     debug!("Let's get image capturing time!");
     let start = Instant::now();
-    let monitors = Monitor::all().unwrap();
 
     //thread listens for quit command
     let (tx_exit, rx_exit) = mpsc::channel();
@@ -99,6 +98,7 @@ fn main() -> Result<()> {
         }
     });
 
+    let monitors = Monitor::all().unwrap();
     //let us get the possible dir
     let storage_dir = if let Some(dir) = args.dir {
         //does the directory exist?
@@ -124,6 +124,8 @@ fn main() -> Result<()> {
         //current directory is the default
         "./".to_string()
     };
+
+    let mut baseline_images = take_screenshot(&monitors, &storage_dir)?;
     //take an initial screenshot for comparison
     let first_baseline = take_screenshot(&monitors, &storage_dir);
     println!("Press {} to exit", "q".bold().yellow());
@@ -136,19 +138,24 @@ fn main() -> Result<()> {
             }
         }
         let now = Utc::now();
-        for monitor in monitors.clone() {
-            let now_monitor = format!("{}{}", monitor.name(), now.to_string());
-            let image = monitor.capture_image().unwrap();
-            let screen_shot_path =
-                format!("{}monitor-{}.png", storage_dir, normalized(&now_monitor));
-            image.save(&screen_shot_path)?;
-            //now we load the image we just created using 'image' lib
-            let scr_img = ImageReader::open(&screen_shot_path)?.decode()?;
-            //then we compute the pHash
-            //if hamming_distance_exceeds_limit(image)
-            //if distance not big enough, we delete the new image
-            //otherwise it can stay
-        }
+        let mut new_screen_shots = take_screenshot(&monitors, &storage_dir);
+        //now we compare the pHash of each image with the baseline
+        //if it has changed enough, we keep the newly created image, and replace the baseline to
+        //the new image
+        //if not we delete the new images and keep the old baseline images
+        //for monitor in monitors.clone() {
+        //    let now_monitor = format!("{}{}", monitor.name(), now.to_string());
+        //    let image = monitor.capture_image().unwrap();
+        //    let screen_shot_path =
+        //        format!("{}monitor-{}.png", storage_dir, normalized(&now_monitor));
+        //    image.save(&screen_shot_path)?;
+        //    //now we load the image we just created using 'image' lib
+        //    let scr_img = ImageReader::open(&screen_shot_path)?.decode()?;
+        //    //then we compute the pHash
+        //    //if hamming_distance_exceeds_limit(image)
+        //    //if distance not big enough, we delete the new image
+        //    //otherwise it can stay
+        //}
         thread::sleep(Duration::from_secs(num_seconds_between_screen_shots));
     }
 
@@ -173,11 +180,6 @@ fn take_screenshot(
         //now we load the image we just created using 'image' lib
         let just_saved_img = image::ImageReader::open(&path)?.decode()?;
         monitor_screenshots.insert(now_monitor_name, just_saved_img);
-
-        //then we compute the pHash
-        //if hamming_distance_exceeds_limit(image)
-        //if distance not big enough, we delete the new image
-        //otherwise it can stay
     }
     //replace this with the actual hashmap
     Ok(monitor_screenshots)
