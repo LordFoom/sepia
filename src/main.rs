@@ -125,10 +125,11 @@ fn main() -> Result<()> {
         "./".to_string()
     };
 
-    let mut baseline_images = take_screenshot(&monitors, &storage_dir)?;
     //take an initial screenshot for comparison
-    let first_baseline = take_screenshot(&monitors, &storage_dir);
+    let mut baseline_images = take_screenshot(&monitors, &storage_dir)?;
     println!("Press {} to exit", "q".bold().yellow());
+    //TODO replace this with an arg, also tune it, and don't forget to drink apple juice
+    let sensitivity = 100;
     //main loop that takes screenshots
     loop {
         if let Ok(ch) = rx_exit.try_recv() {
@@ -140,22 +141,10 @@ fn main() -> Result<()> {
         let now = Utc::now();
         let mut new_screen_shots = take_screenshot(&monitors, &storage_dir);
         //now we compare the pHash of each image with the baseline
+        let change_figure = difference_from_baseline(baseline_images, new_screen_shots)?;
         //if it has changed enough, we keep the newly created image, and replace the baseline to
         //the new image
         //if not we delete the new images and keep the old baseline images
-        //for monitor in monitors.clone() {
-        //    let now_monitor = format!("{}{}", monitor.name(), now.to_string());
-        //    let image = monitor.capture_image().unwrap();
-        //    let screen_shot_path =
-        //        format!("{}monitor-{}.png", storage_dir, normalized(&now_monitor));
-        //    image.save(&screen_shot_path)?;
-        //    //now we load the image we just created using 'image' lib
-        //    let scr_img = ImageReader::open(&screen_shot_path)?.decode()?;
-        //    //then we compute the pHash
-        //    //if hamming_distance_exceeds_limit(image)
-        //    //if distance not big enough, we delete the new image
-        //    //otherwise it can stay
-        //}
         thread::sleep(Duration::from_secs(num_seconds_between_screen_shots));
     }
 
@@ -163,11 +152,15 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+fn difference_from_baseline(
+    baseline_images: HashMap<String, String>,
+    new_screen_shots: std::result::Result<HashMap<String, String>, color_eyre::eyre::Error>,
+) -> _ {
+    todo!()
+}
+
 ///Take a screenshot, return map of monitor name => screen shot path
-fn take_screenshot(
-    monitors: &Vec<Monitor>,
-    storage_dir: &str,
-) -> Result<HashMap<String, DynamicImage>> {
+fn take_screenshot(monitors: &Vec<Monitor>, storage_dir: &str) -> Result<HashMap<String, String>> {
     let now = Utc::now();
     let mut monitor_screenshots = HashMap::new();
     for monitor in monitors.clone() {
@@ -178,8 +171,8 @@ fn take_screenshot(
         //monitor_screenshots.insert(path, )
         screen_shot.save(&path)?;
         //now we load the image we just created using 'image' lib
-        let just_saved_img = image::ImageReader::open(&path)?.decode()?;
-        monitor_screenshots.insert(now_monitor_name, just_saved_img);
+        //let just_saved_img = image::ImageReader::open(&path)?.decode()?;
+        //monitor_screenshots.insert(now_monitor_name, just_saved_img);
     }
     //replace this with the actual hashmap
     Ok(monitor_screenshots)
