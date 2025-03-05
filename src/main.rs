@@ -100,7 +100,38 @@ fn main() -> Result<()> {
 
     let monitors = Monitor::all().unwrap();
     //let us get the possible dir
-    let storage_dir = if let Some(dir) = args.dir {
+    let storage_dir = get_storage_dir(args);
+
+    //take an initial screenshot for comparison
+    let mut baseline_images = take_screenshot(&monitors, &storage_dir)?;
+    println!("Press {} to exit", "q".bold().yellow());
+    //TODO replace this with an arg, also tune it, and don't forget to drink apple juice
+    let sensitivity = 100;
+    //main loop that takes screenshots
+    loop {
+        if let Ok(ch) = rx_exit.try_recv() {
+            if ch == 'q' {
+                println!("{}....!!", "Quitting".red().bold());
+                break;
+            }
+        }
+        let now = Utc::now();
+        let mut new_screen_shots = take_screenshot(&monitors, &storage_dir)?;
+        //now we compare the pHash of each image with the baseline
+        let change_figure = difference_from_baseline(&baseline_images, &new_screen_shots)?;
+        //if it has changed enough, we keep the newly created image, and replace the baseline to
+        //the new image
+        //if not we delete the new images and keep the old baseline images
+        thread::sleep(Duration::from_secs(num_seconds_between_screen_shots));
+    }
+
+    println!("Elapsed time: {:?}", start.elapsed());
+    Ok(())
+}
+
+///Determine requested storage dir and create if needed
+fn get_storage_dir(args: AppArgs) -> String {
+    if let Some(dir) = args.dir {
         //does the directory exist?
         let storage_dir = Path::new(&dir);
         if storage_dir.exists() {
@@ -123,39 +154,15 @@ fn main() -> Result<()> {
     } else {
         //current directory is the default
         "./".to_string()
-    };
-
-    //take an initial screenshot for comparison
-    let mut baseline_images = take_screenshot(&monitors, &storage_dir)?;
-    println!("Press {} to exit", "q".bold().yellow());
-    //TODO replace this with an arg, also tune it, and don't forget to drink apple juice
-    let sensitivity = 100;
-    //main loop that takes screenshots
-    loop {
-        if let Ok(ch) = rx_exit.try_recv() {
-            if ch == 'q' {
-                println!("{}....!!", "Quitting".red().bold());
-                break;
-            }
-        }
-        let now = Utc::now();
-        let mut new_screen_shots = take_screenshot(&monitors, &storage_dir);
-        //now we compare the pHash of each image with the baseline
-        let change_figure = difference_from_baseline(baseline_images, new_screen_shots)?;
-        //if it has changed enough, we keep the newly created image, and replace the baseline to
-        //the new image
-        //if not we delete the new images and keep the old baseline images
-        thread::sleep(Duration::from_secs(num_seconds_between_screen_shots));
     }
-
-    println!("Elapsed time: {:?}", start.elapsed());
-    Ok(())
 }
 
+///We compare the images in the map and we return their pHash differences.
+///Return a map of MonitorName->DifferenceScore
 fn difference_from_baseline(
-    baseline_images: HashMap<String, String>,
-    new_screen_shots: std::result::Result<HashMap<String, String>, color_eyre::eyre::Error>,
-) -> _ {
+    baseline_images: &HashMap<String, String>,
+    new_screen_shots: &HashMap<String, String>,
+) -> Result<HashMap<String, String>> {
     todo!()
 }
 
