@@ -158,12 +158,21 @@ fn get_storage_dir(args: AppArgs) -> String {
 }
 
 ///We compare the images in the map and we return their pHash differences.
+///Takes in two hashmap of monitorName->picPath
 ///Return a map of MonitorName->DifferenceScore
 fn difference_from_baseline(
     baseline_images: &HashMap<String, String>,
     new_screen_shots: &HashMap<String, String>,
 ) -> Result<HashMap<String, String>> {
-    todo!()
+    let mut diff_results = HashMap::new();
+
+    for (monitor_name, pic_file_path) in new_screen_shots {
+        //see if there is an equivalent baseline
+        //if so, compare the difference and store them
+        if let Some(monitor) = baseline_images.get(monitor_name) {};
+        //if not, put 999 difference to be ensured it gets saved as new baseline
+    }
+    Ok(diff_results)
 }
 
 ///Take a screenshot, return map of monitor name => screen shot path
@@ -177,9 +186,7 @@ fn take_screenshot(monitors: &Vec<Monitor>, storage_dir: &str) -> Result<HashMap
         let path = format!("{}monitor-{}.png", storage_dir, normalized(&now_monitor));
         //monitor_screenshots.insert(path, )
         screen_shot.save(&path)?;
-        //now we load the image we just created using 'image' lib
-        //let just_saved_img = image::ImageReader::open(&path)?.decode()?;
-        //monitor_screenshots.insert(now_monitor_name, just_saved_img);
+        monitor_screenshots.insert(now_monitor_name, path);
     }
     //replace this with the actual hashmap
     Ok(monitor_screenshots)
