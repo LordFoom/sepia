@@ -5,6 +5,7 @@ use chrono::Utc;
 use clap::Parser;
 use color_eyre::{eyre::Result, owo_colors::OwoColorize};
 use image::{DynamicImage, ImageReader};
+use img_hash::HasherConfig;
 use log::{debug, LevelFilter};
 use log4rs::{
     append::{console::ConsoleAppender, file::FileAppender},
@@ -163,14 +164,24 @@ fn get_storage_dir(args: AppArgs) -> String {
 fn difference_from_baseline(
     baseline_images: &HashMap<String, String>,
     new_screen_shots: &HashMap<String, String>,
-) -> Result<HashMap<String, String>> {
+) -> Result<HashMap<String, u32>> {
     let mut diff_results = HashMap::new();
 
-    for (monitor_name, pic_file_path) in new_screen_shots {
+    let hasher = HasherConfig::new().to_hasher();
+    for (monitor_name, new_pic_path) in new_screen_shots {
         //see if there is an equivalent baseline
         //if so, compare the difference and store them
-        if let Some(monitor) = baseline_images.get(monitor_name) {};
-        //if not, put 999 difference to be ensured it gets saved as new baseline
+        if let Some(old_pic_path) = baseline_images.get(monitor_name) {
+            let old_pic = image::open(old_pic_path)?;
+            let new_pic = image::open(new_pic_path)?;
+            let old_hash = hasher.hash_image(&old_pic);
+            let new_hash = hasher.hash_image(&new_pic);
+            let hamming_distance = old_hash.dist(&new_hash);
+            diff_results.insert(monitor_name.clone(), hamming_distance);
+        } else {
+            //if not, put 999 difference to be ensured it gets saved as new baseline
+            diff_results.insert(monitor_name.clone(), 999);
+        };
     }
     Ok(diff_results)
 }
