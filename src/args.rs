@@ -10,6 +10,9 @@ pub struct AppArgs {
     #[arg(short, long)]
     pub dir: Option<String>,
     ///Only take screenshots if the screen has changed,
-    #[arg[short, long]]
+    #[arg(short, long)]
     pub motion_triggered: bool,
+    ///Sensitivity of motion triggered, only trigger if 'difference' greater than this. Default is
+    #[arg(short, long, requires = "motion_triggered")]
+    pub sensitivity: u32,
 }

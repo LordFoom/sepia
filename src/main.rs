@@ -4,8 +4,7 @@ use args::AppArgs;
 use chrono::Utc;
 use clap::Parser;
 use color_eyre::{eyre::Result, owo_colors::OwoColorize};
-use image::{DynamicImage, ImageReader};
-use img_hash::HasherConfig;
+use img_hash::{HashAlg, HasherConfig};
 use log::{debug, LevelFilter};
 use log4rs::{
     append::{console::ConsoleAppender, file::FileAppender},
@@ -116,11 +115,11 @@ fn main() -> Result<()> {
                 break;
             }
         }
-        let now = Utc::now();
-        let mut new_screen_shots = take_screenshot(&monitors, &storage_dir)?;
+        let new_screen_shots = take_screenshot(&monitors, &storage_dir)?;
         //now we compare the pHash of each image with the baseline
         let change_figure = difference_from_baseline(&baseline_images, &new_screen_shots)?;
         //if it has changed enough, we keep the newly created image, and replace the baseline to
+
         //the new image
         //if not we delete the new images and keep the old baseline images
         thread::sleep(Duration::from_secs(num_seconds_between_screen_shots));
