@@ -117,9 +117,16 @@ fn main() -> Result<()> {
         }
         let new_screen_shots = take_screenshot(&monitors, &storage_dir)?;
         //now we compare the pHash of each image with the baseline
-        let change_figure = difference_from_baseline(&baseline_images, &new_screen_shots)?;
-        //if it has changed enough, we keep the newly created image, and replace the baseline to
-
+        let new_screenshot_diff_scores =
+            difference_from_baseline(&baseline_images, &new_screen_shots)?;
+        //at this point we should have an entry for every screenshot even if a new monitor appeared
+        //if it has changed enough, we keep the newly created image, and replace the baseline
+        //
+        delete_unchanged_screenshots(
+            new_screen_shots,
+            new_screenshot_diff_scores,
+            baseline_images,
+        );
         //the new image
         //if not we delete the new images and keep the old baseline images
         thread::sleep(Duration::from_secs(num_seconds_between_screen_shots));
@@ -127,6 +134,14 @@ fn main() -> Result<()> {
 
     println!("Elapsed time: {:?}", start.elapsed());
     Ok(())
+}
+
+fn delete_unchanged_screenshots(
+    new_screen_shots: HashMap<String, String>,
+    new_screenshot_diff_scores: HashMap<String, u32>,
+    baseline_images: HashMap<String, String>,
+) -> Result<()> {
+    todo!()
 }
 
 ///Determine requested storage dir and create if needed
