@@ -123,10 +123,11 @@ fn main() -> Result<()> {
         //if it has changed enough, we keep the newly created image, and replace the baseline
         //
         delete_unchanged_screenshots(
-            new_screen_shots,
-            new_screenshot_diff_scores,
-            baseline_images,
-        );
+            &new_screen_shots,
+            &new_screenshot_diff_scores,
+            &baseline_images,
+            sensitivity,
+        )?;
         //the new image
         //if not we delete the new images and keep the old baseline images
         thread::sleep(Duration::from_secs(num_seconds_between_screen_shots));
@@ -137,11 +138,23 @@ fn main() -> Result<()> {
 }
 
 fn delete_unchanged_screenshots(
-    new_screen_shots: HashMap<String, String>,
-    new_screenshot_diff_scores: HashMap<String, u32>,
-    baseline_images: HashMap<String, String>,
+    new_screen_shots: &HashMap<String, String>,
+    new_screenshot_diff_scores: &HashMap<String, u32>,
+    baseline_images: &HashMap<String, String>,
+    sensitivity: u32,
 ) -> Result<()> {
-    todo!()
+    //go through each screenshot
+    //get the sensitivy score
+    //if <= sensitivity, we delete
+    new_screen_shots
+        .iter()
+        .for_each(|(screen_shot_key, screen_shot_path)| {
+            if let Some(score) = new_screenshot_diff_scores.get(screen_shot_key) {
+                if score < &sensitivity {
+                    let path = std::path::Path::new(screen_shot_path);
+                }
+            }
+        });
 }
 
 ///Determine requested storage dir and create if needed
