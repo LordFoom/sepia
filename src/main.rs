@@ -15,7 +15,7 @@ use log4rs::{
 
 use std::{
     collections::HashMap,
-    io::{stdin, Read},
+    io::{stdin, Error, Read},
     path::Path,
     sync::mpsc,
     thread,
@@ -152,9 +152,13 @@ fn delete_unchanged_screenshots(
             if let Some(score) = new_screenshot_diff_scores.get(screen_shot_key) {
                 if score < &sensitivity {
                     let path = std::path::Path::new(screen_shot_path);
+                    if let Err(e) = std::fs::remove_file(path) {
+                        panic!("Unable to remove screen shot file: {:?}", e);
+                    };
                 }
             }
         });
+    Ok(())
 }
 
 ///Determine requested storage dir and create if needed
