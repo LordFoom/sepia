@@ -72,11 +72,7 @@ fn init_logging(verbose: bool) -> Result<()> {
 fn main() -> Result<()> {
     let args = AppArgs::parse();
     init_logging(args.verbose)?;
-    let num_seconds_between_screen_shots = if let Some(user_time) = args.time {
-        user_time
-    } else {
-        1
-    };
+    let num_seconds_between_screen_shots = args.time.unwrap_or(1);
     debug!("Let's get image capturing time!");
     let start = Instant::now();
 
@@ -218,12 +214,12 @@ fn difference_from_baseline(
 }
 
 ///Take a screenshot, return map of monitor name => screen shot path
-fn take_screenshot(monitors: &Vec<Monitor>, storage_dir: &str) -> Result<HashMap<String, String>> {
+fn take_screenshot(monitors: &[Monitor], storage_dir: &str) -> Result<HashMap<String, String>> {
     let now = Utc::now();
     let mut monitor_screenshots = HashMap::new();
-    for monitor in monitors.clone() {
+    for monitor in monitors {
         let now_monitor_name = monitor.name().to_string();
-        let now_monitor = format!("{}{}", now_monitor_name, now.to_string());
+        let now_monitor = format!("{}{}", now_monitor_name, now);
         let screen_shot = monitor.capture_image().unwrap();
         let path = format!("{}monitor-{}.png", storage_dir, normalized(&now_monitor));
         //monitor_screenshots.insert(path, )
