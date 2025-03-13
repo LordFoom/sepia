@@ -121,7 +121,7 @@ fn main() -> Result<()> {
         delete_unchanged_screenshots(
             &new_screen_shots,
             &new_screenshot_diff_scores,
-            &baseline_images,
+            &mut baseline_images,
             sensitivity,
         )?;
         //the new image
@@ -136,7 +136,7 @@ fn main() -> Result<()> {
 fn delete_unchanged_screenshots(
     new_screen_shots: &HashMap<String, String>,
     new_screenshot_diff_scores: &HashMap<String, u32>,
-    baseline_images: &HashMap<String, String>,
+    baseline_images: &mut HashMap<String, String>,
     sensitivity: u32,
 ) -> Result<()> {
     //go through each screenshot
@@ -151,7 +151,13 @@ fn delete_unchanged_screenshots(
                     if let Err(e) = std::fs::remove_file(path) {
                         panic!("Unable to remove screen shot file: {:?}", e);
                     };
+                } else {
+                    //we keep the screenshot and make it the new baseline
+                    baseline_images.insert(screen_shot_key.to_owned(), screen_shot_path.to_owned());
                 }
+            } else {
+                //no score for the given key, let us make sure it is now in baseline images
+                baseline_images.insert(screen_shot_key.to_owned(), screen_shot_path.to_owned());
             }
         });
     Ok(())
