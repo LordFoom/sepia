@@ -4,7 +4,7 @@ use args::AppArgs;
 use chrono::Utc;
 use clap::Parser;
 use color_eyre::{eyre::Result, owo_colors::OwoColorize};
-use img_hash::{HashAlg, HasherConfig};
+use img_hash::HasherConfig;
 use log::{debug, LevelFilter};
 use log4rs::{
     append::{console::ConsoleAppender, file::FileAppender},
@@ -15,7 +15,7 @@ use log4rs::{
 
 use std::{
     collections::HashMap,
-    io::{stdin, Error, Read},
+    io::{stdin, Read},
     path::Path,
     sync::mpsc,
     thread,

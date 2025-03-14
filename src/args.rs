@@ -14,5 +14,5 @@ pub struct AppArgs {
     pub motion_triggered: bool,
     ///Sensitivity of motion triggered, only trigger if 'difference' greater than this. Default is
     #[arg(short, long, requires = "motion_triggered")]
-    pub sensitivity: u32,
+    pub sensitivity: Option<u32>,
 }
